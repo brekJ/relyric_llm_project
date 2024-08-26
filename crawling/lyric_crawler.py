@@ -11,6 +11,7 @@ SLEEP_TIMES = [x/10 for x in [40, 60, 10, 50]]
 
 # webdriver_manager를 사용하여 크롬 드라이버의 실행 경로 설정
 service = Service(executable_path=ChromeDriverManager().install())
+
 # 설정된 service를 사용하여 크롬 드라이버 인스턴스 생성
 driver = ChromeDriver(service=service)
 driver.implicitly_wait(10)  # 최대 10초 동안 대기
@@ -95,8 +96,10 @@ for index in range(100, 800+1, 100):
         element.click()
         spread = driver.find_element(By.XPATH, r'//*[@id="lyricArea"]/button/i')
         spread.click()
-        text = driver.find_element(By.XPATH, r'//*[@id="d_video_summary"]').text
-        print(text)
+        title = driver.find_element(By.XPATH, r'//*[@id="downloadfrm"]/div/div/div[2]/div[1]/div[1]').text
+        lyric = driver.find_element(By.XPATH, r'//*[@id="d_video_summary"]').text
+        with open(f"../data/{title}.txt", "w") as f:
+            f.write(lyric)
         driver.back()
         time.sleep(random.choice(SLEEP_TIMES))
     time.sleep(random.choice(SLEEP_TIMES))
