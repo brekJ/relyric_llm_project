@@ -48,9 +48,14 @@ xpath_element(driver, r'/html/body/div/div[3]/div/div/form/div[1]/div/h4[2]/a').
 
 # 중복 검사할 리스트 생성
 check_list = []
+try:
+    with open("check_list.txt", 'r') as f:
+        check_list = f.read().split("\n")
+except:
+    pass
 
 # 일련번호 정의
-id = 0
+id = len(check_list) - 1
 
 try:
     # 시대별 차트 클릭
@@ -61,6 +66,8 @@ try:
         time.sleep(random.choice(SLEEP_TIMES))
         # 년도별 차트 클릭
         for year in range(10):
+            if period == 0 and year <= 2:
+                continue
             if period == 0 and year >= 5:
                 continue
             if period == 4 and year >= 6:
@@ -89,6 +96,12 @@ try:
                 
                 elements = driver.find_elements(By.XPATH, r'/html/body/div/div[3]/div/div/div/div[1]/div[2]/form/div[1]/table/tbody/tr')
                 for el_idx, element in enumerate(elements):
+                    if el_idx == 50:
+                        driver.find_element(By.XPATH, r'/html/body/div/div[3]/div/div/div/div[1]/div[2]/form/div[2]/span/a').click()
+                        time.sleep(random.choice(SLEEP_TIMES))
+                    # 중단된 크롤러를 다시 실행할 때 사용
+                    if (period == 0 and year == 3 and month == 0 and el_idx < 93):#or (period == 0 and year == 3 and month in [0,1,2,3,4])
+                        continue
                     element.find_element(By.XPATH, './td[4]/div/a').click()
                     time.sleep(random.choice(SLEEP_TIMES))
             
@@ -96,14 +109,26 @@ try:
                     song_singer = driver.find_element(By.XPATH, r'/html/body/div[1]/div[3]/div/div/div/form/div/div/div[2]/div[1]/div[2]').text
                     song_gengre = driver.find_element(By.XPATH, r'/html/body/div[1]/div[3]/div/div/div/form/div/div/div[2]/div[2]/dl/dd[3]').text
                     song_lyric = driver.find_element(By.XPATH, r'/html/body/div[1]/div[3]/div/div/div/div[2]/div[2]/div').text
-                    song_mood = driver_chat.make_mood(song_lyric)
-                    if song_mood is None:
-                        assert False, "Failed to retrieve the mood"
+                    if period == 0:
+                        song_year = 2024 - year
+                    elif period == 1:
+                        song_year = 2019 - year
+                    elif period == 2:
+                        song_year = 2009 - year
+                    elif period == 3:
+                        song_year = 1999 - year
+                    elif period == 4:
+                        song_year = 1989 - year
                     # check_list에 중복 검사
-                    if (song_title, song_singer) in check_list:
+                    if f"({song_title}, {song_singer})" in check_list:
                         driver.back()
                         time.sleep(random.choice(SLEEP_TIMES))
                         continue
+                    
+                    song_mood = driver_chat.make_mood(song_lyric)
+                    if song_mood is None:
+                        assert False, "Failed to retrieve the mood"
+                    
                         
                     # mongoDB에 저장할 document 생성
                     document = {
@@ -112,17 +137,27 @@ try:
                         'singer':song_singer,
                         'gengre':song_gengre,
                         'lyric':song_lyric,
-                        'mood':song_mood}
+                        'mood':song_mood,
+                        'year':song_year}
                     # document 삽입
                     collection.insert_one(document)
-                    
-                    check_list.append((song_title, song_singer))
+                    with open('check_list.txt', 'a') as f:
+                        f.write(f"({song_title}, {song_singer})\n")
+                    check_list.append(f"({song_title}, {song_singer})")
                     driver.back()
+                    
+                    print(f'id: {id} done')
                     print(f"{song_title, song_singer}")
                     print(f"{check_list=}")
+                    print(f"{song_mood=}")
+                    # if el_idx == 49:
+                    #     driver.find_element(By.XPATH, r'/html/body/div/div[3]/div/div/div/div[1]/div[2]/form/div[2]/span/a').click()
+                    #     time.sleep(random.choice(SLEEP_TIMES))
+                    
                     gc.collect()
                     time.sleep(random.choice(SLEEP_TIMES))
                     id += 1
+                    
 except Exception as e:
     print(f"Error encountered: {e}")
     print(f"period : {period + 1}")
