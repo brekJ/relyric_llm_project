@@ -8,6 +8,7 @@ import time
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
+import pyautogui as pg
 class ChatDriver():
     def __init__(self):
         self.chat_cnt = 2
@@ -56,17 +57,18 @@ class ChatDriver():
         input
         노래가사 : {lyric}
 
-        분위기 종류 : 밝고 긍정적임: 에너지 넘치고 희망적인 분위기,
-        슬픔 : 슬픔, 눈물, 그리움을 담은 분위기,
-        어둡고 우울함: 절망, 긴장, 불안을 담은 분위기,
-        로맨틱하고 감성적임: 사랑과 애정을 담은 분위기,
-        자신감과 강렬함: 힘과 에너지가 넘치는, 결단력 있는 분위기,
-        평화롭고 차분함: 조용하고 안정된 분위기,
-        혼란스럽고 복잡함: 복잡한 감정과 혼란스러운 분위기,
-        유쾌하고 재미있음: 가볍고 유쾌한 분위기,
-        분노와 공격적임: 강한 분노와 공격성을 담은 분위기,
+        분위기 종류 
+        밝고 긍정적임,
+        슬픔,
+        어둡고 우울함,
+        로맨틱하고 감성적임,
+        자신감과 강렬함,
+        평화롭고 차분함,
+        혼란스럽고 복잡함,
+        유쾌하고 재미있음,
+        분노와 공격적임,
 
-        #### "가사의 분위기 : "만 한글로 출력하라
+        #### "가사의 분위기 : 결과"의 형식으로 답하라
         return
         가사의 분위기 : '''.replace('\n', ' ')
         
@@ -74,11 +76,16 @@ class ChatDriver():
             input_area = WebDriverWait(self.driver_chat, 10).until(
                 EC.element_to_be_clickable((By.XPATH, r'/html/body/div[1]/div[1]/div[2]/main/div[1]/div[2]/div[1]/div/form/div/div[2]/div/div/div[2]/textarea'))
             )
-            input_area.send_keys(chat_template + '\n')
+            input_area.send_keys(chat_template)
+            input_btn = WebDriverWait(self.driver_chat, 10).until(
+                EC.element_to_be_clickable((By.XPATH, r'/html/body/div[1]/div[1]/div[2]/main/div[1]/div[2]/div[1]/div/form/div/div[2]/div/div/button'))
+            )
+            input_btn.click()
             
         except TimeoutException:
             print("Failed to find or interact with the input area")
-            return None
+            pg.press('enter')
+            # return None
         
         time.sleep(5)
         
@@ -90,6 +97,6 @@ class ChatDriver():
             print("Failed to retrieve the mood")
             return None
         self.chat_cnt += 2
-        mood = mood.split(': ')[1]
+        mood = mood.split(":")[-1]
         mood = mood.replace(' ', '')
         return mood
