@@ -74,11 +74,11 @@ class ChatDriver():
         
         try:
             input_area = WebDriverWait(self.driver_chat, 10).until(
-                EC.element_to_be_clickable((By.XPATH, r'/html/body/div[1]/div[1]/div[2]/main/div[1]/div[2]/div[1]/div/form/div/div[2]/div/div/div[2]/textarea'))
+                EC.element_to_be_clickable((By.XPATH, r'/html/body/div[1]/div[1]/div[2]/main/div[1]/div[2]/div/div[1]/div/form/div/div[2]/div/div/div[2]/textarea'))
             )
             input_area.send_keys(chat_template)
             input_btn = WebDriverWait(self.driver_chat, 10).until(
-                EC.element_to_be_clickable((By.XPATH, r'/html/body/div[1]/div[1]/div[2]/main/div[1]/div[2]/div[1]/div/form/div/div[2]/div/div/button'))
+                EC.element_to_be_clickable((By.XPATH, r'/html/body/div[1]/div[1]/div[2]/main/div[1]/div[2]/div/div[1]/div/form/div/div[2]/div/div/button'))
             )
             input_btn.click()
             
@@ -87,7 +87,7 @@ class ChatDriver():
             pg.press('enter')
             # return None
         
-        time.sleep(5)
+        time.sleep(7)
         
         try:
             mood = WebDriverWait(self.driver_chat, 10).until(
@@ -97,6 +97,6 @@ class ChatDriver():
             print("Failed to retrieve the mood")
             return None
         self.chat_cnt += 2
-        mood = mood.split(":")[-1]
+        mood = mood.split(":", 1)[-1]
         mood = mood.replace(' ', '')
         return mood

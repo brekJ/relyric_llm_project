@@ -25,7 +25,7 @@ db = client['mel_lyrics']
 collection = db['songs']
 
 # Sleep 시간 설정
-SLEEP_TIMES = [x/10 for x in [40, 60, 10, 50]]
+SLEEP_TIMES = [x/10 for x in [40, 20, 10, 30]]
 
 # webdriver_manager를 사용하여 크롬 드라이버의 실행 경로 설정
 service = Service(executable_path=ChromeDriverManager().install())
@@ -57,20 +57,29 @@ except:
 # 일련번호 정의
 id = len(check_list) - 1
 
+# 중단시 재시작을 위한 변수
+off_period = 1
+off_year = 1
+off_month = 4
+off_el_idx = 41
 try:
     # 시대별 차트 클릭
     for period in range(5):
+        # 중단된 크롤러를 다시 실행할 때 사용
+        if period < off_period:
+            continue
         period_x_path = r'/html/body/div/div[3]/div/div/form/div[1]/div/div/div[1]/div[1]/ul/li[' + str(period + 1) + r']/span'
         period_btn = xpath_element(driver, period_x_path)
         period_btn.click()
         time.sleep(random.choice(SLEEP_TIMES))
         # 년도별 차트 클릭
         for year in range(10):
-            if period == 0 and year <= 2:
-                continue
             if period == 0 and year >= 5:
                 continue
             if period == 4 and year >= 6:
+                continue
+            # 중단된 크롤러를 다시 실행할 때 사용
+            if period == off_period and year < off_year:
                 continue
             year_x_path = r'/html/body/div/div[3]/div/div/form/div[1]/div/div/div[2]/div[1]/ul/li[' + str(year + 1) + r']/span'
             year_btn = xpath_element(driver, year_x_path)
@@ -81,6 +90,9 @@ try:
                 if period == 0 and year == 0 and month >= 7:
                     continue
                 if period == 4 and year == 5 and month >= 11:
+                    continue
+                # 중단된 크롤러를 다시 실행할 때 사용
+                if period == off_period and year == off_year and month < off_month:
                     continue
                 month_x_path = r'/html/body/div/div[3]/div/div/form/div[1]/div/div/div[3]/div[1]/ul/li[' + str(month + 1) + r']/span'
                 driver.find_element(By.XPATH, month_x_path).click()
@@ -100,7 +112,7 @@ try:
                         driver.find_element(By.XPATH, r'/html/body/div/div[3]/div/div/div/div[1]/div[2]/form/div[2]/span/a').click()
                         time.sleep(random.choice(SLEEP_TIMES))
                     # 중단된 크롤러를 다시 실행할 때 사용
-                    if (period == 0 and year == 3 and month == 0 and el_idx < 93):#or (period == 0 and year == 3 and month in [0,1,2,3,4])
+                    if period == off_period and year == off_year and month == off_month and el_idx < off_el_idx:
                         continue
                     element.find_element(By.XPATH, './td[4]/div/a').click()
                     time.sleep(random.choice(SLEEP_TIMES))
