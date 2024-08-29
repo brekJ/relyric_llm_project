@@ -271,3 +271,8 @@ $RECYCLE.BIN/
 # End of https://www.toptal.com/developers/gitignore/api/linux,windows,jupyternotebooks,python,react,firebase,visualstudiocode
 
 data/*
+
+lms/.huggingface/*
+*.gguf
+lms/Modefile
+*.json
