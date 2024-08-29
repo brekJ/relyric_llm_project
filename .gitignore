@@ -274,5 +274,5 @@ data/*
 
 lms/.huggingface/*
 *.gguf
-lms/Modefile
+lms/Modelfile
 *.json
