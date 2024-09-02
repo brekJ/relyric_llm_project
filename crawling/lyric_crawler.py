@@ -31,7 +31,8 @@ SLEEP_TIMES = [x/10 for x in [40, 20, 10, 30]]
 service = Service(executable_path=ChromeDriverManager().install())
 
 # chatgpt를 사용할 driver 생성
-driver_chat = ChatDriver()
+go_id = 'hansung'
+driver_chat = ChatDriver(go_id)
 
 # 설정된 service를 사용하여 크롬 드라이버 인스턴스 생성
 driver = ChromeDriver(service=service)
@@ -49,7 +50,7 @@ xpath_element(driver, r'/html/body/div/div[3]/div/div/form/div[1]/div/h4[2]/a').
 # 중복 검사할 리스트 생성
 check_list = []
 try:
-    with open("check_list.txt", 'r') as f:
+    with open("check_list.txt", 'r', encoding='utf-8') as f:
         check_list = f.read().split("\n")
 except:
     pass
@@ -58,10 +59,11 @@ except:
 id = len(check_list) - 1
 
 # 중단시 재시작을 위한 변수
-off_period = 1
+off_period = 2
 off_year = 1
-off_month = 4
-off_el_idx = 41
+off_month = 5
+off_el_idx = 64
+
 try:
     # 시대별 차트 클릭
     for period in range(5):
@@ -153,7 +155,7 @@ try:
                         'year':song_year}
                     # document 삽입
                     collection.insert_one(document)
-                    with open('check_list.txt', 'a') as f:
+                    with open('check_list.txt', 'a', encoding='utf-8') as f:
                         f.write(f"({song_title}, {song_singer})\n")
                     check_list.append(f"({song_title}, {song_singer})")
                     driver.back()
