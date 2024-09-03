@@ -5,17 +5,24 @@ from selenium.webdriver.common.by import By
 import chromedriver_autoinstaller
 import subprocess
 import time
+
+import os
+import platform
+
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 import pyautogui as pg
 class ChatDriver():
-    def __init__(self):
+    def __init__(self, go_id):
+        self.go_id = go_id
         self.chat_cnt = 2
         # 디버거 모드로 Chrome 구동 (리눅스용으로 경로 수정)
-        subprocess.Popen(["/usr/bin/google-chrome", "--remote-debugging-port=9223", "--user-data-dir=/tmp/chrome_dev_test", "--disable-dev-shm-usage"])
-
-        # subprocess.Popen(["/usr/bin/google-chrome", "--remote-debugging-port=9222", "--user-data-dir=/tmp/chrome_dev_test"])
+        if platform.system() == "Linux":
+            subprocess.Popen(["/usr/bin/google-chrome", "--remote-debugging-port=9223", "--user-data-dir=/tmp/chrome_dev_test", "--disable-dev-shm-usage"])
+        elif platform.system() == "Windows":
+            chrome_path = r'C:\Program Files\Google\Chrome\Application\chrome.exe'
+            subprocess.Popen([chrome_path, "--remote-debugging-port=9223", "--user-data-dir=C:\\tmp\\chrome_dev_test", "--disable-dev-shm-usage"])
 
         # Chrome 옵션 설정
         option = Options()
@@ -23,8 +30,11 @@ class ChatDriver():
 
         # Chrome 버전 가져오기 및 ChromeDriver 경로 설정
         chrome_ver = chromedriver_autoinstaller.get_chrome_version().split('.')[0]
-        driver_path = f'./{chrome_ver}/chromedriver'
-
+        if platform.system() == "Linux":
+            driver_path = f'./{chrome_ver}/chromedriver'
+        elif platform.system() == "Windows":
+            driver_path = f'./{chrome_ver}/chromedriver.exe'
+        
         # Windows의 경우와 달리, 리눅스에서는 .exe 확장자가 없습니다.
         service = Service(driver_path)
 
@@ -73,26 +83,40 @@ class ChatDriver():
         가사의 분위기 : '''.replace('\n', ' ')
         
         try:
-            input_area = WebDriverWait(self.driver_chat, 10).until(
-                EC.element_to_be_clickable((By.XPATH, r'/html/body/div[1]/div[1]/div[2]/main/div[1]/div[2]/div/div[1]/div/form/div/div[2]/div/div/div[2]/textarea'))
-            )
-            input_area.send_keys(chat_template)
-            input_btn = WebDriverWait(self.driver_chat, 10).until(
-                EC.element_to_be_clickable((By.XPATH, r'/html/body/div[1]/div[1]/div[2]/main/div[1]/div[2]/div/div[1]/div/form/div/div[2]/div/div/button'))
-            )
-            input_btn.click()
-            
+            if self.go_id == "gmail":
+                input_area = WebDriverWait(self.driver_chat, 10).until(
+                    EC.element_to_be_clickable((By.XPATH, r'/html/body/div[1]/div[1]/div[2]/main/div[1]/div[2]/div/div[1]/div/form/div/div[2]/div/div/div[2]/textarea'))
+                )
+                input_area.send_keys(chat_template)
+                input_btn = WebDriverWait(self.driver_chat, 10).until(
+                    EC.element_to_be_clickable((By.XPATH, r'/html/body/div[1]/div[1]/div[2]/main/div[1]/div[2]/div/div[1]/div/form/div/div[2]/div/div/button'))
+                )
+                input_btn.click()
+            elif self.go_id == "hansung":
+                input_area = WebDriverWait(self.driver_chat, 10).until(
+                    EC.element_to_be_clickable((By.XPATH, r'/html/body/div[1]/div[1]/div[2]/main/div/div[1]/div[2]/div/div[2]/div/form/div/div[2]/div/div/div[2]/textarea'))
+                )
+                input_area.send_keys(chat_template)
+                input_btn = WebDriverWait(self.driver_chat, 10).until(
+                    EC.element_to_be_clickable((By.XPATH, r'/html/body/div[1]/div[1]/div[2]/main/div/div[1]/div[2]/div/div[2]/div/form/div/div[2]/div/div/button'))
+                )
+                input_btn.click()
         except TimeoutException:
             print("Failed to find or interact with the input area")
             pg.press('enter')
             # return None
         
-        time.sleep(7)
-        
+        time.sleep(10)
+        mood=None
         try:
-            mood = WebDriverWait(self.driver_chat, 10).until(
-                EC.visibility_of_element_located((By.XPATH, f'/html/body/div[1]/div[1]/div[2]/main/div[1]/div[1]/div/div/div/div/article[{self.chat_cnt}]/div/div/div[2]/div/div[1]/div/div/div/p'))
-            ).text
+            if self.go_id == "gmail":
+                mood = WebDriverWait(self.driver_chat, 10).until(
+                    EC.visibility_of_element_located((By.XPATH, f'/html/body/div[1]/div[1]/div[2]/main/div[1]/div[1]/div/div/div/div/article[{self.chat_cnt}]/div/div/div[2]/div/div[1]/div/div/div/p'))
+                ).text
+            elif self.go_id == "hansung":
+                mood = WebDriverWait(self.driver_chat, 10).until(
+                    EC.visibility_of_element_located((By.XPATH, f'/html/body/div[1]/div[1]/div[2]/main/div/div[1]/div[1]/div/div/div/div/article[{self.chat_cnt}]/div/div/div[2]/div/div[1]/div/div/div/p'))
+                ).text
         except TimeoutException:
             print("Failed to retrieve the mood")
             return None
