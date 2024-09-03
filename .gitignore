@@ -278,3 +278,4 @@ lms/Modelfile
 *.json
 fine_tuning_300
 fine_tuning_2000
+fine_tuning
