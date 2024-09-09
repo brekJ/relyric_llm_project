@@ -22,12 +22,42 @@ const LoadingSpinner = () => (
   </svg>
 );
 
+const compareLyrics = (input, output) => {
+  const inputLines = input.split("\n");
+  const outputLines = output.split("\n");
+
+  let result = [];
+
+  for (let i = 0; i < Math.max(inputLines.length, outputLines.length); i++) {
+    const inputWords = (inputLines[i] || "").split(/(\s+)/);
+    const outputWords = (outputLines[i] || "").split(/(\s+)/);
+
+    for (let j = 0; j < Math.max(inputWords.length, outputWords.length); j++) {
+      const inputWord = inputWords[j] || "";
+      const outputWord = outputWords[j] || "";
+
+      if (inputWord !== outputWord) {
+        result.push({ text: outputWord, isDifferent: true });
+      } else {
+        result.push({ text: outputWord, isDifferent: false });
+      }
+    }
+
+    if (i < Math.max(inputLines.length, outputLines.length) - 1) {
+      result.push({ text: "\n", isDifferent: false });
+    }
+  }
+
+  return result;
+};
+
 const Main = () => {
   const [inputLyrics, setInputLyrics] = useState("");
   const [atmosphere, setAtmosphere] = useState("");
   const [outputLyrics, setOutputLyrics] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [comparedLyrics, setComparedLyrics] = useState([]);
   const outputRef = useRef(null);
 
   const handleInputChange = (e) => {
@@ -39,35 +69,27 @@ const Main = () => {
   };
 
   const applyFormattingFromInput = (outputText) => {
-    const inputTokens = inputLyrics.split(/(\s+)/);
+    const inputLines = inputLyrics.split("\n");
     const outputWords = outputText.split(/\s+/);
 
     let result = "";
     let outputIndex = 0;
-    let whitespaceMap = [];
 
-    // 공백과 개행 기록
-    inputTokens.forEach((token, index) => {
-      if (token.match(/\s+/)) {
-        whitespaceMap.push({ index, value: token });
-      }
-    });
+    for (let i = 0; i < inputLines.length; i++) {
+      const inputWords = inputLines[i].split(/\s+/);
+      let lineResult = "";
 
-    // 출력 텍스트 구성
-    let currentIndex = 0;
-    whitespaceMap.forEach((item, mapIndex) => {
-      while (currentIndex < item.index) {
-        if (outputIndex < outputWords.length) {
-          result +=
-            outputWords[outputIndex] +
-            (mapIndex < whitespaceMap.length - 1 ? " " : "");
-          outputIndex++;
-        }
-        currentIndex++;
+      for (
+        let j = 0;
+        j < inputWords.length && outputIndex < outputWords.length;
+        j++
+      ) {
+        lineResult += outputWords[outputIndex] + " ";
+        outputIndex++;
       }
-      result += item.value;
-      currentIndex++;
-    });
+
+      result += lineResult.trim() + "\n";
+    }
 
     // 남은 출력 단어들 추가
     while (outputIndex < outputWords.length) {
@@ -82,6 +104,7 @@ const Main = () => {
     setIsLoading(true);
     setError("");
     setOutputLyrics("");
+    setComparedLyrics([]);
 
     try {
       const response = await fetch(`${BACKEND_URL}/api/ollama`, {
@@ -89,14 +112,14 @@ const Main = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ input: inputLyrics, atmosphere: atmosphere }),
+        body: JSON.stringify({ input: inputLyrics, atmosphere }),
       });
 
       if (response.ok) {
         const result = await response.text();
-        // const formattedLyrics = applyFormattingFromInput(result);
-        // setOutputLyrics(formattedLyrics);
-        setOutputLyrics(result); // 직접 결과를 설정
+        const formattedLyrics = applyFormattingFromInput(result);
+        setOutputLyrics(formattedLyrics);
+        setComparedLyrics(compareLyrics(inputLyrics, formattedLyrics));
       } else {
         throw new Error("Server responded with an error");
       }
@@ -113,6 +136,7 @@ const Main = () => {
       outputRef.current.scrollTop = outputRef.current.scrollHeight;
     }
   }, [outputLyrics]);
+
   return (
     <div className="min-h-screen bg-purple-200 p-8 flex flex-col items-center justify-center">
       <div className="w-full max-w-4xl flex flex-col items-center">
@@ -152,13 +176,21 @@ const Main = () => {
             <h2 className="text-2xl font-bold mb-4 text-purple-800">
               Output Lyrics
             </h2>
-            <textarea
+            <div
               ref={outputRef}
-              className="w-full h-64 p-4 bg-black text-white rounded-lg resize-none shadow-inner mb-4 whitespace-pre-wrap"
-              value={outputLyrics}
-              readOnly
-              placeholder="Generated lyrics will appear here..."
-            />
+              className="w-full h-[calc(100%-2rem)] p-4 bg-black text-white rounded-lg overflow-auto shadow-inner whitespace-pre-wrap"
+            >
+              {comparedLyrics.map((word, index) => (
+                <span
+                  key={index}
+                  className={
+                    word.isDifferent ? "font-bold text-yellow-400" : ""
+                  }
+                >
+                  {word.text}
+                </span>
+              ))}
+            </div>
           </motion.div>
         </div>
 
